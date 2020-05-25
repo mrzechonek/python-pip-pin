@@ -1,12 +1,14 @@
-import distutils
+import distutils.cmd
+import operator
 import subprocess
 import sys
 from enum import Enum
+from functools import reduce
 
-from pkg_resources import Requirement, get_distribution
+from pkg_resources import DistributionNotFound, Requirement, get_distribution
 
 
-class Environment(Enum):
+class Env(Enum):
     INSTALL = "install"
     TESTS = "tests"
     DEVELOP = "develop"
@@ -14,39 +16,40 @@ class Environment(Enum):
 
 class Command(distutils.cmd.Command):
     user_options = [
+        ("install", "i", "Use install dependencies"),
         ("tests", "t", "Use test dependencies"),
         ("develop", "d", "Use develop dependencies"),
     ]
 
     def initialize_options(self):
-        self.install = True
+        self.install = False
         self.tests = False
         self.develop = False
 
     def finalize_options(self):
-        assert not (self.tests and self.develop), "Can't do both"
-
-    def get_reqs(self, pinned=False):
-        reqs = {
-            Environment.INSTALL: self.distribution.install_requires,
-            Environment.TESTS: self.distribution.tests_require,
-            Environment.DEVELOP: self.distribution.develop_requires,
-        }
-
-        if not pinned:
-            return reqs[self.environment]
-
-        raise NotImplementedError("sync --pinned")
+        self.install = self.install or not any([self.tests, self.develop])
 
     @property
-    def environment(self):
+    def envs(self):
         if self.tests:
-            return Environment.TESTS
+            yield Env.TESTS
 
         if self.develop:
-            return Environment.DEVELOP
+            yield Env.DEVELOP
 
-        return Environment.INSTALL
+        if self.install:
+            yield Env.INSTALL
+
+    @property
+    def reqs(self):
+        def parse(reqs):
+            return [Requirement.parse(r) for r in reqs]
+
+        return {
+            Env.INSTALL: parse(self.distribution.install_requires),
+            Env.TESTS: parse(self.distribution.tests_require),
+            Env.DEVELOP: parse(self.distribution.develop_requires),
+        }
 
 
 class Sync(Command):
@@ -61,21 +64,53 @@ class Sync(Command):
         self.pinned = False
 
     def run(self):
-        self.announce("Syncing %s" % (self.environment))
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+        ]
 
-        # TODO: pip options?
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install"] + self.get_reqs()
-        )
+        for env in self.envs:
+            if self.pinned:
+                subprocess.check_call(
+                    cmd + ["-r", f".pippin.{env.value}",]
+                )
+
+            else:
+                subprocess.check_call(cmd + [str(r) for r in self.reqs[env]])
 
 
 class Pin(Command):
     description = "Pippin pin"
 
+    def walk(self, req, pins):
+        dist = get_distribution(req.name)
+
+        pins.update({self.walk(r, pins) for r in dist.requires(extras=req.extras)})
+
+        req.specifier = dist.as_requirement().specifier
+        req.marker = None
+        return req
+
     def run(self):
-        # TODO: recursively pin what's currently installed into .ini sections
-        raise NotImplementedError("pin")
-        self.announce("Pinning %s" % (self.environment))
+        for env in self.envs:
+            pins = set()
+
+            try:
+                for r in self.reqs[env]:
+                    pins.add(self.walk(r, pins))
+            except DistributionNotFound:
+                raise RuntimeError("Run setup.py sync first") from None
+
+            with open(".pippin.%s" % env.value, "w") as f:
+                if env == Env.TESTS:
+                    f.write("-c .pippin.install\n")
+                if env == Env.DEVELOP:
+                    f.write("-c .pippin.tests\n")
+
+                f.write("\n".join(sorted(map(str, pins))))
+                f.write("\n")
 
 
 def validate_develop_requires(*args):

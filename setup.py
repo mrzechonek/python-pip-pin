@@ -1,3 +1,5 @@
+#!env python
+
 from setuptools import find_packages, setup
 
 # fmt: off
@@ -24,7 +26,6 @@ setup(
         'pytest-runner',
     ],
     install_requires=[
-        'pip-tools',
     ],
     tests_require=[
         'pytest',
