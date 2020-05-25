@@ -48,7 +48,7 @@ $ ./setup.py sync --develop
 Pinning
 -------
 
-This will produce (or update) `.pippin` file, which you are supposed to commit into the repo.
+This will produce (or update) `.pip-pin` directory, which you are supposed to commit into the repo.
 
 ```
 $ ./setup.py pin [(--tests|--develop)]
