@@ -1,9 +1,7 @@
 import distutils.cmd
-import operator
 import subprocess
 import sys
 from enum import Enum
-from functools import reduce
 
 from pkg_resources import DistributionNotFound, Requirement, get_distribution
 
