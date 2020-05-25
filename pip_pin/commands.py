@@ -1,15 +1,16 @@
 import distutils.cmd
 import subprocess
 import sys
+import os
 from enum import Enum
 
 from pkg_resources import DistributionNotFound, Requirement, get_distribution
 
 
 class Env(Enum):
-    INSTALL = "install"
-    TESTS = "tests"
-    DEVELOP = "develop"
+    INSTALL = "./.pip-pin/install.txt"
+    TESTS = "./.pip-pin/tests.txt"
+    DEVELOP = "./.pip-pin/develop.txt"
 
 
 class Command(distutils.cmd.Command):
@@ -72,7 +73,7 @@ class Sync(Command):
         for env in self.envs:
             if self.pinned:
                 subprocess.check_call(
-                    cmd + ["-r", f".pippin.{env.value}",]
+                    cmd + ["-r", os.path.abspath(env.value)]
                 )
 
             else:
@@ -105,15 +106,20 @@ class Pin(Command):
             except DistributionNotFound:
                 raise RuntimeError("Run setup.py sync first") from None
 
-            self.announce(f"# .pippin.{env.value}")
+            self.announce(f"# {env.value}")
             for pin in pins:
                 self.announce(str(pin))
 
-            with open(f".pippin.{env.value}", "w") as f:
+            try:
+                os.mkdir(os.path.dirname(env.value))
+            except FileExistsError:
+                pass
+
+            with open(env.value, "w") as f:
                 if env == Env.TESTS:
-                    f.write("-c .pippin.install\n")
+                    f.write(f"-c install.txt\n")
                 if env == Env.DEVELOP:
-                    f.write("-c .pippin.tests\n")
+                    f.write(f"-c tests.txt\n")
 
                 f.write("\n".join(sorted(map(str, pins))))
                 f.write("\n")

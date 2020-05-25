@@ -4,10 +4,10 @@ from setuptools import find_packages, setup
 
 # fmt: off
 setup(
-    name='pippin',
+    name='pip-pin',
     version='0.0.1',
     packages=find_packages(),
-    url='https://github.com/mrzechonek/pippin',
+    url='https://github.com/mrzechonek/python-pip-pin',
     license='MIT',
     author='Michał Lowas-Rzechonek',
     author_email='michal@rzechonek.net',
@@ -36,15 +36,15 @@ setup(
     ],
     entry_points={
         "distutils.commands": [
-            "sync = pippin:Sync",
-            "pin = pippin:Pin",
+            "sync = pip_pin:Sync",
+            "pin = pip_pin:Pin",
         ],
         "distutils.setup_keywords": [
-            "develop_requires = pippin:validate_develop_requires",
+            "develop_requires = pip_pin:validate_develop_requires",
         ],
         'egg_info.writers': [
-            'tests_require.txt = pippin:tests_require',
-            'develop_requires.txt = pippin:develop_requires',
+            'tests_require.txt = pip_pin:tests_require',
+            'develop_requires.txt = pip_pin:develop_requires',
         ],
     },
 )

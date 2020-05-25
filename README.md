@@ -13,7 +13,7 @@ setup(
     version='1.0.',
     packages=find_packages(),
     setup_requires=[
-        'pippin',
+        'pip-pin',
     ],
     install_requires=[
         'flask',
