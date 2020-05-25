@@ -90,7 +90,8 @@ class Pin(Command):
 
         pins.update({self.walk(r, pins) for r in dist.requires(extras=req.extras)})
 
-        req.specifier = dist.as_requirement().specifier
+        # ignore version if req specifies a direct url
+        req.specifier = dist.as_requirement().specifier if req.url is None else None
         req.marker = None
         return req
 
