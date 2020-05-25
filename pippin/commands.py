@@ -78,6 +78,9 @@ class Sync(Command):
                 )
 
             else:
+                if not self.reqs[env]:
+                    continue
+
                 subprocess.check_call(cmd + [str(r) for r in self.reqs[env]])
 
 
@@ -103,7 +106,11 @@ class Pin(Command):
             except DistributionNotFound:
                 raise RuntimeError("Run setup.py sync first") from None
 
-            with open(".pippin.%s" % env.value, "w") as f:
+            self.announce(f"# .pippin.{env.value}")
+            for pin in pins:
+                self.announce(str(pin))
+
+            with open(f".pippin.{env.value}", "w") as f:
                 if env == Env.TESTS:
                     f.write("-c .pippin.install\n")
                 if env == Env.DEVELOP:
