@@ -59,7 +59,7 @@ Pinning
 This will produce (or update) `.pip-pin` directory, which you are supposed to commit into the repo.
 
 ```
-$ ./setup.py pin [(--tests|--develop)]
+$ ./setup.py pin [(--install|--tests|--develop)]
 ```
 
 Pinned dependencies:
@@ -68,12 +68,6 @@ Pinned dependencies:
 Installing pinned dependencies:
 
 ```
-$ ./setup.py sync --pinned [(--tests|--develop)]
+$ ./setup.py sync --pinned [(--install|--tests|--develop)]
 
 ```
-
-Additional pip options:
------------------------
-
-```
-$ ./setup.py sync -- <everything-else-will-be-passed-to-pip-install>
