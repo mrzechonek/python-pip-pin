@@ -2,6 +2,10 @@ THIS IS AN EXPERIMENT. PLAY WITH IT, THINK ABOUT IT, DON'T USE IT ON PRODUCTION.
 
 Let me know what you think.
 
+[![PyPI version shields.io](https://img.shields.io/pypi/v/pip-pin.svg)](https://pypi.python.org/pypi/pip-pin/)
+
+[![PyPI status](https://img.shields.io/pypi/status/pip-pin.svg)](https://pypi.python.org/pypi/pip-pin/)
+
 pip pin
 =======
 
