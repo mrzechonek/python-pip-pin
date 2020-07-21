@@ -8,10 +8,13 @@ from pkg_resources import DistributionNotFound, Requirement, get_distribution
 
 
 class Env(Enum):
-    INSTALL = "./.pip-pin/install.txt"
-    TESTS = "./.pip-pin/tests.txt"
-    DEVELOP = "./.pip-pin/develop.txt"
+    INSTALL = "install"
+    TESTS = "tests"
+    DEVELOP = "develop"
 
+    @property
+    def path(self):
+        return f"./.pip-pin/{self.value}.txt"
 
 class Command(distutils.cmd.Command):
     user_options = [
@@ -72,6 +75,7 @@ class Sync(Command):
 
         for env in self.envs:
             if self.pinned:
+                self.announce(f"{env.value}: -r {env.path}")
                 subprocess.check_call(
                     cmd + ["-r", os.path.abspath(env.value)]
                 )
@@ -80,7 +84,9 @@ class Sync(Command):
                 if not self.reqs[env]:
                     continue
 
-                subprocess.check_call(cmd + [str(r) for r in self.reqs[env]])
+                reqs = [str(r) for r in self.reqs[env]]
+                self.announce(f"{env.value}: {reqs}")
+                subprocess.check_call(cmd + reqs)
 
 
 class Pin(Command):
@@ -104,24 +110,26 @@ class Pin(Command):
                 for r in self.reqs[env]:
                     pins.add(self.walk(r, pins))
             except DistributionNotFound:
-                raise RuntimeError("Run setup.py sync first") from None
+                raise RuntimeError(f"Run setup.py sync --{env.value} first") from None
 
-            self.announce(f"# {env.value}")
+            self.announce(f"# {env.path}")
+
+            pins = list(sorted(set(map(str, pins))))
             for pin in pins:
-                self.announce(str(pin))
+                self.announce(pin)
 
             try:
-                os.mkdir(os.path.dirname(env.value))
+                os.mkdir(os.path.dirname(env.path))
             except FileExistsError:
                 pass
 
-            with open(env.value, "w") as f:
+            with open(env.path, "w") as f:
                 if env == Env.TESTS:
                     f.write(f"-c install.txt\n")
                 if env == Env.DEVELOP:
                     f.write(f"-c tests.txt\n")
 
-                f.write("\n".join(sorted(map(str, pins))))
+                f.write("\n".join(pins))
                 f.write("\n")
 
 
