@@ -77,7 +77,7 @@ class Sync(Command):
             if self.pinned:
                 self.announce(f"{env.value}: -r {env.path}")
                 subprocess.check_call(
-                    cmd + ["-r", os.path.abspath(env.value)]
+                    cmd + ["-r", os.path.abspath(env.path)]
                 )
 
             else:

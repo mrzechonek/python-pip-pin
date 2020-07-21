@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 # fmt: off
 setup(
     name='pip-pin',
-    version='0.0.2',
+    version='0.0.3',
     packages=find_packages(),
     url='https://github.com/mrzechonek/python-pip-pin',
     license='MIT',
