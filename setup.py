@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 # fmt: off
 setup(
     name='pip-pin',
-    version='0.0.1',
+    version='0.0.2',
     packages=find_packages(),
     url='https://github.com/mrzechonek/python-pip-pin',
     license='MIT',
@@ -24,6 +24,7 @@ setup(
     python_requires='>= 3.6',
     setup_requires=[
         'pytest-runner',
+        'pip-pin',
     ],
     install_requires=[
     ],

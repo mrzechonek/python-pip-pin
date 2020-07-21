@@ -4,7 +4,7 @@ import subprocess
 import sys
 import tempfile
 
-import pippin
+import pip_pin
 import pytest
 
 

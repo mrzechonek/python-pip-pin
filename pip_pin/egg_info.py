@@ -3,4 +3,9 @@ def tests_require(cmd, basename, filename):
 
 
 def develop_requires(cmd, basename, filename):
-    cmd.write_file("develop_requires", filename, "\n".join(cmd.distribution.develop_requires or []))
+    try:
+        reqs = cmd.distribution.develop_requires or []
+    except AttributeError:
+        reqs = []
+
+    cmd.write_file("develop_requires", filename, "\n".join(reqs))
