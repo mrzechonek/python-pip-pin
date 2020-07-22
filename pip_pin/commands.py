@@ -125,9 +125,9 @@ class Pin(Command):
 
             with open(env.path, "w") as f:
                 if env == Env.TESTS:
-                    f.write(f"-c install.txt\n")
+                    f.write(f"-r install.txt\n-c install.txt\n")
                 if env == Env.DEVELOP:
-                    f.write(f"-c tests.txt\n")
+                    f.write(f"-r tests.txt\n-c tests.txt\n")
 
                 f.write("\n".join(pins))
                 f.write("\n")
