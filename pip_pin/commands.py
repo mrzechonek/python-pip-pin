@@ -78,6 +78,10 @@ class Pin(Command):
     description = "Pippin pin"
 
     def walk(self, req, pins):
+        # don't pin setuptools
+        if req.name == 'setuptools':
+            return
+
         dist = get_distribution(req.name)
 
         pins.update({self.walk(r, pins) for r in dist.requires(extras=req.extras)})
@@ -96,7 +100,7 @@ class Pin(Command):
 
             self.announce(f"# {env.path}")
 
-            pins = list(sorted(set(map(str, pins))))
+            pins = list(sorted(set(str(pin) for pin in pins if pin)))
             for pin in pins:
                 self.announce(pin)
 
