@@ -1,5 +1,4 @@
 import distutils.cmd
-import subprocess
 import sys
 import os
 from enum import Enum
@@ -57,13 +56,8 @@ class Command(distutils.cmd.Command):
 class Sync(Command):
     description = "Pippin sync"
 
-    user_options = Command.user_options + [
-        ("pinned", "p", "Install pinned versions"),
-    ]
-
     def initialize_options(self):
         super().initialize_options()
-        self.pinned = False
 
     def run(self):
         cmd = [
@@ -74,19 +68,10 @@ class Sync(Command):
         ]
 
         for env in self.envs:
-            if self.pinned:
-                self.announce(f"{env.value}: -r {env.path}")
-                subprocess.check_call(
-                    cmd + ["-r", os.path.abspath(env.path)]
-                )
-
-            else:
-                if not self.reqs[env]:
-                    continue
-
-                reqs = [str(r) for r in self.reqs[env]]
-                self.announce(f"{env.value}: {reqs}")
-                subprocess.check_call(cmd + reqs)
+            self.announce(f"{env.value}: -r {env.path}")
+            self.spawn(
+                cmd + ["-r", os.path.abspath(env.path)]
+            )
 
 
 class Pin(Command):
@@ -106,17 +91,20 @@ class Pin(Command):
         for env in self.envs:
             pins = set()
 
-            try:
-                for r in self.reqs[env]:
-                    pins.add(self.walk(r, pins))
-            except DistributionNotFound:
-                raise RuntimeError(f"Run setup.py sync --{env.value} first") from None
+            for r in self.reqs[env]:
+                pins.add(self.walk(r, pins))
 
             self.announce(f"# {env.path}")
 
             pins = list(sorted(set(map(str, pins))))
             for pin in pins:
                 self.announce(pin)
+
+            if self.dry_run:
+                sys.stderr.write(f"# {env.path}\n")
+                sys.stderr.write("\n".join(pins))
+                sys.stderr.write("\n")
+                continue
 
             try:
                 os.mkdir(os.path.dirname(env.path))
