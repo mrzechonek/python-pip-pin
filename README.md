@@ -38,20 +38,7 @@ setup(
 Non-pinned dependencies:
 ------------------------
 
-Runtime:
-```
-$ ./setup.py sync --install
-```
-
-Tests:
-```
-$ ./setup.py sync --tests
-```
-
-Development:
-```
-$ ./setup.py sync --develop
-```
+Just install whatever you want with `pip`.
 
 Pinning
 -------
@@ -62,12 +49,16 @@ This will produce (or update) `.pip-pin` directory, which you are supposed to co
 $ ./setup.py pin [(--install|--tests|--develop)]
 ```
 
+Note that this will pin *only* things listed in a respective `setup.py`
+section. This means you can have additional stuff installed on your local
+virtualenv, and noone is going to care until you make it a dependency.
+
 Pinned dependencies:
 --------------------
 
 Installing pinned dependencies:
 
 ```
-$ ./setup.py sync --pinned [(--install|--tests|--develop)]
+$ ./setup.py sync [(--install|--tests|--develop)]
 
 ```

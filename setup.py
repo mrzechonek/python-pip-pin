@@ -2,16 +2,21 @@
 
 from setuptools import find_packages, setup
 
+with open("README.md", "r") as f:
+    long_description = f.read()
+
 # fmt: off
 setup(
     name='pip-pin',
-    version='0.0.6',
+    version='0.0.6.post3',
     packages=find_packages(),
     url='https://github.com/mrzechonek/python-pip-pin',
     license='MIT',
     author='Michał Lowas-Rzechonek',
     author_email='michal@rzechonek.net',
     description='Pippin',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
