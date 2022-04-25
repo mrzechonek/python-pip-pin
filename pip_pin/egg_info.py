@@ -1,5 +1,7 @@
 def tests_require(cmd, basename, filename):
-    cmd.write_file("tests_require", filename, "\n".join(cmd.distribution.tests_require or []))
+    cmd.write_file(
+        "tests_require", filename, "\n".join(cmd.distribution.tests_require or [])
+    )
 
 
 def develop_requires(cmd, basename, filename):

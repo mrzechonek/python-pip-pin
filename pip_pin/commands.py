@@ -1,9 +1,13 @@
 import distutils.cmd
-import sys
 import os
+import sys
+from contextlib import suppress
+from copy import copy
 from enum import Enum
 
 from pkg_resources import DistributionNotFound, Requirement, get_distribution
+
+PIP_PIN_DIR = "./.pip-pin"
 
 
 class Env(Enum):
@@ -13,7 +17,8 @@ class Env(Enum):
 
     @property
     def path(self):
-        return f"./.pip-pin/{self.value}.txt"
+        return f"./{PIP_PIN_DIR}/{self.value}.txt"
+
 
 class Command(distutils.cmd.Command):
     user_options = [
@@ -69,60 +74,89 @@ class Sync(Command):
 
         for env in self.envs:
             self.announce(f"{env.value}: -r {env.path}")
-            self.spawn(
-                cmd + ["-r", os.path.abspath(env.path)]
-            )
+            self.spawn(cmd + ["-r", os.path.abspath(env.path)])
 
 
 class Pin(Command):
     description = "Pippin pin"
 
-    def walk(self, req, pins):
+    def walk(self, req, pins, extras=True):
         # don't pin setuptools
-        if req.name == 'setuptools':
+        if req.name == "setuptools":
             return
 
         dist = get_distribution(req.name)
 
-        pins.update({self.walk(r, pins) for r in dist.requires(extras=req.extras)})
+        pins.update(
+            {
+                self.walk(r, pins, extras)
+                for r in dist.requires(extras=req.extras if extras else [])
+            }
+        )
 
         # ignore version if req specifies a direct url
         req.specifier = dist.as_requirement().specifier if req.url is None else None
         req.marker = None
+        if not extras:
+            req.extras = []
         return req
 
-    def run(self):
-        for env in self.envs:
-            pins = set()
+    def constraints(self):
+        constraints = set()
 
+        for env in Env:
             for r in self.reqs[env]:
-                pins.add(self.walk(r, pins))
+                constraints.add(self.walk(copy(r), constraints, extras=False))
 
-            self.announce(f"# {env.path}")
+        constraints = list(sorted(set(str(c) for c in constraints if c)))
 
-            pins = list(sorted(set(str(pin) for pin in pins if pin)))
-            for pin in pins:
-                self.announce(pin)
+        if self.dry_run:
+            sys.stderr.write(f"# ./{PIP_PIN_DIR}/constraints.txt\n")
+            sys.stderr.write("\n".join(pins))
+            sys.stderr.write("\n")
+            return
 
-            if self.dry_run:
-                sys.stderr.write(f"# {env.path}\n")
-                sys.stderr.write("\n".join(pins))
-                sys.stderr.write("\n")
-                continue
+        with open(f"./{PIP_PIN_DIR}/constraints.txt", "w") as f:
+            f.write("\n".join(constraints))
+            f.write("\n")
 
-            try:
-                os.mkdir(os.path.dirname(env.path))
-            except FileExistsError:
-                pass
+    def requirements(self, env):
+        pins = set()
 
-            with open(env.path, "w") as f:
-                if env == Env.TESTS:
-                    f.write(f"-r install.txt\n-c install.txt\n")
-                if env == Env.DEVELOP:
-                    f.write(f"-r tests.txt\n-c tests.txt\n")
+        for r in self.reqs[env]:
+            pins.add(self.walk(r, pins))
 
-                f.write("\n".join(pins))
-                f.write("\n")
+        self.announce(f"# {env.path}")
+
+        pins = list(sorted(set(str(p) for p in pins if p)))
+        for pin in pins:
+            self.announce(pin)
+
+        if self.dry_run:
+            sys.stderr.write(f"# {env.path}\n")
+            sys.stderr.write("\n".join(pins))
+            sys.stderr.write("\n")
+            return
+
+        with open(env.path, "w") as f:
+            f.write(f"-c constraints.txt\n")
+
+            if env == Env.TESTS:
+                f.write(f"-r install.txt\n")
+            if env == Env.DEVELOP:
+                f.write(f"-r tests.txt\n")
+
+            f.write("\n".join(pins))
+            f.write("\n")
+
+    def run(self):
+        with suppress(FileExistsError):
+            os.mkdir(f"./pip-pin")
+
+        self.constraints()
+
+        for env in self.envs:
+            self.requirements(env)
 
 
 def validate_develop_requires(*args):
