@@ -139,7 +139,8 @@ class Pin(Command):
             return
 
         with open(env.path, "w") as f:
-            f.write(f"-c constraints.txt\n")
+            if env != Env.INSTALL:
+                f.write(f"-c constraints.txt\n")
 
             if env == Env.TESTS:
                 f.write(f"-r install.txt\n")
