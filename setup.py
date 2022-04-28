@@ -8,7 +8,7 @@ with open("README.md", "r") as f:
 # fmt: off
 setup(
     name='pip-pin',
-    version='0.0.8',
+    version='0.0.9',
     packages=find_packages(),
     url='https://github.com/mrzechonek/python-pip-pin',
     license='MIT',

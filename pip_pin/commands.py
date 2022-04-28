@@ -152,7 +152,7 @@ class Pin(Command):
 
     def run(self):
         with suppress(FileExistsError):
-            os.mkdir(f"./pip-pin")
+            os.mkdir(PIP_PIN_DIR)
 
         self.constraints()
 
