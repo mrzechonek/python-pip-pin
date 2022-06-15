@@ -74,7 +74,9 @@ class Sync(Command):
 
         for env in self.envs:
             self.announce(f"{env.value}: -r {env.path}")
-            self.spawn(cmd + ["-r", os.path.abspath(env.path)])
+            cmd += ["-r", os.path.abspath(env.path)]
+
+        self.spawn(cmd)
 
 
 class Pin(Command):
