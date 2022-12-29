@@ -5,7 +5,9 @@ from contextlib import suppress
 from copy import copy
 from enum import Enum
 
-from pkg_resources import DistributionNotFound, Requirement, get_distribution
+from pkg_resources import Requirement, get_distribution
+
+from pip_pin.util import get_develop_requires, get_tests_require
 
 PIP_PIN_DIR = "./.pip-pin"
 
@@ -53,8 +55,8 @@ class Command(distutils.cmd.Command):
 
         return {
             Env.INSTALL: parse(self.distribution.install_requires),
-            Env.TESTS: parse(self.distribution.tests_require),
-            Env.DEVELOP: parse(self.distribution.develop_requires),
+            Env.TESTS: parse(get_tests_require(self.distribution)),
+            Env.DEVELOP: parse(get_develop_requires(self.distribution)),
         }
 
 
